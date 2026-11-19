@@ -1,0 +1,65 @@
+'use strict';
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
+
+// Superfície mínima exposta para a interface (somente leitura + preferências).
+contextBridge.exposeInMainWorld('hub', {
+  getState: () => ipcRenderer.invoke('get-state'),
+  getConfig: () => ipcRenderer.invoke('get-config'),
+  setConfig: (patch) => ipcRenderer.invoke('set-config', patch),
+  getPaths: () => ipcRenderer.invoke('get-paths'),
+  dismiss: (id) => ipcRenderer.invoke('dismiss', id),
+  dismissInactive: () => ipcRenderer.invoke('dismiss-inactive'),
+  undismiss: (ids) => ipcRenderer.invoke('undismiss', ids),
+  getReport: () => ipcRenderer.invoke('get-report'),
+  saveReport: (md) => ipcRenderer.invoke('save-report', md),
+  copyText: (text) => ipcRenderer.invoke('copy-text', text),
+  awaySummary: () => ipcRenderer.invoke('away-summary'),
+  seenNow: () => ipcRenderer.invoke('seen-now'),
+  onWelcomeBack: (cb) => ipcRenderer.on('welcome-back', () => cb()),
+  closeShift: () => ipcRenderer.invoke('close-shift'),
+  phoneStatus: () => ipcRenderer.invoke('phone-status'),
+  phoneStart: (opts) => ipcRenderer.invoke('phone-start', opts),
+  phoneStop: () => ipcRenderer.invoke('phone-stop'),
+  phoneNewQr: () => ipcRenderer.invoke('phone-new-qr'),
+  phoneNames: (names) => ipcRenderer.invoke('phone-names', names),
+  onPhone: (cb) => ipcRenderer.on('phone', (_e, s) => cb(s)),
+  chatPoll: (sid, rev) => ipcRenderer.invoke('chat-poll', sid, rev),
+  chatSend: (sid, text, opts) => ipcRenderer.invoke('chat-send', sid, text, opts),
+  chatInbox: () => ipcRenderer.invoke('chat-inbox'),
+  chatDecide: (sid, id, behavior) => ipcRenderer.invoke('chat-decide', sid, id, behavior),
+  chatStop: (sid) => ipcRenderer.invoke('chat-stop', sid),
+  chatClose: (sid) => ipcRenderer.invoke('chat-close', sid),
+  chatMode: (sid, mode) => ipcRenderer.invoke('chat-mode', sid, mode),
+  chatModels: () => ipcRenderer.invoke('chat-models'),
+  chatProjects: () => ipcRenderer.invoke('chat-projects'),
+  chatPickFolder: () => ipcRenderer.invoke('chat-pick-folder'),
+  chatPrepare: (cwd) => ipcRenderer.invoke('chat-prepare', cwd),
+  chatCommands: (sid) => ipcRenderer.invoke('chat-commands', sid),
+  chatFiles: (sid, query) => ipcRenderer.invoke('chat-files', sid, query),
+  chatPick: () => ipcRenderer.invoke('chat-pick'),
+  chatExport: (sid, title) => ipcRenderer.invoke('chat-export', sid, title),
+  managerGet: () => ipcRenderer.invoke('manager-get'),
+  managerSet: (sid) => ipcRenderer.invoke('manager-set', sid),
+  onManager: (cb) => ipcRenderer.on('manager', (_e, sid) => cb(sid)),
+  officeState: () => ipcRenderer.invoke('office-state'),
+  onOffice: (cb) => ipcRenderer.on('office', (_e, s) => cb(s)),
+  vaultInfo: () => ipcRenderer.invoke('vault-info'),
+  vaultList: (rel) => ipcRenderer.invoke('vault-list', rel),
+  vaultRead: (rel) => ipcRenderer.invoke('vault-read', rel),
+  vaultSearch: (q) => ipcRenderer.invoke('vault-search', q),
+  vaultOpen: (rel) => ipcRenderer.invoke('vault-open', rel),
+  vaultPick: () => ipcRenderer.invoke('vault-pick'),
+  pathOf: (file) => {
+    try {
+      return webUtils.getPathForFile(file);
+    } catch {
+      return '';
+    }
+  },
+  onChatChanged: (cb) => ipcRenderer.on('chat-changed', () => cb()),
+  getUsage: () => ipcRenderer.invoke('usage-get'),
+  onUsage: (cb) => ipcRenderer.on('usage', (_e, u) => cb(u)),
+  onState: (cb) => ipcRenderer.on('state', (_e, s) => cb(s)),
+  onAlert: (cb) => ipcRenderer.on('alert', (_e, a) => cb(a)),
+  onFocusSession: (cb) => ipcRenderer.on('focus-session', (_e, id) => cb(id)),
+});

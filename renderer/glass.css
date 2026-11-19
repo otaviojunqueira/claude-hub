@@ -1,0 +1,200 @@
+/* Layout em tela cheia: o escritório (canvas do Habblaud) ocupa a janela inteira e os painéis flutuam por cima,
+   em vidro escuro translúcido com cantos arredondados — o mesmo visual da interface do Habblaud
+   (https://github.com/marmottajr/habblaud, MIT, © Márcio Junior). Veja THIRD-PARTY-HABBLAUD.txt. */
+
+:root {
+  --gap: 10px;
+  --rail-w: 292px;
+  --side-w: 420px;
+  --topbar-h: 56px; /* medidas de verdade chegam do JS (ResizeObserver) */
+  --dock-h: 232px; /* medido pelo JS */
+  --dock-open: 232px;
+  --rail-on: 1;
+  --side-on: 1;
+  --ui-bg: rgba(18, 21, 29, 0.85);
+  --ui-line: rgba(160, 176, 210, 0.13);
+  --ui-line-strong: rgba(160, 176, 210, 0.24);
+  --ui-accent: #7cc8ff;
+  --ui-radius: 10px;
+  --lv-ok: #4fd18b;
+  --lv-warn: #ffb547;
+  --lv-crit: #ff6b6b;
+}
+
+body { display: block; }
+
+.glass {
+  --panel: transparent;
+  --panel-2: rgba(255, 255, 255, 0.045);
+  --line: var(--ui-line);
+  background: var(--ui-bg);
+  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  backdrop-filter: blur(14px) saturate(1.25);
+  border: 1px solid var(--ui-line);
+  border-radius: var(--ui-radius);
+  box-shadow: 0 12px 32px rgba(5, 7, 12, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ---------------------------------------------------------------- escritório */
+.world-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; z-index: 0; background: #0b0e14; outline: none; }
+body.v-team .world-canvas { display: none; }
+body.v-team { background: radial-gradient(1200px 700px at 30% 10%, #151a26, #0b0e14); }
+
+/* ------------------------------------------------------------------- topo */
+.topbar { position: fixed; top: var(--gap); left: var(--gap); right: var(--gap); z-index: 30; padding: 8px 14px; border-bottom: 1px solid var(--ui-line); gap: 12px 14px; }
+.stat { background: rgba(255, 255, 255, 0.045); border-color: var(--ui-line); border-radius: 8px; }
+.seg-switch { border-color: var(--ui-line-strong); border-radius: 9px; background: rgba(255, 255, 255, 0.035); }
+.seg-switch button { background: transparent; }
+.seg-switch button[aria-selected="true"] { background: var(--ui-accent); color: #06121e; }
+.btn, .chip-btn, .sel { background: rgba(255, 255, 255, 0.045); border-color: var(--ui-line-strong); border-radius: 7px; }
+.sel { color: var(--text); font: inherit; font-size: 13px; padding: 4px 8px; cursor: pointer; max-width: 190px; }
+.sel option { background: #161921; color: var(--text); }
+.btn.primary { background: var(--ui-accent); color: #06121e; border-color: var(--ui-accent); font-weight: 600; }
+.bell { background: rgba(255, 255, 255, 0.045); border-color: var(--ui-line-strong); border-radius: 8px; }
+
+/* mostrador de uso (no lugar dos tokens): barras segmentadas de 5 h e da semana, como no Habblaud */
+.usage { display: flex; align-items: center; gap: 12px; padding: 4px 12px; border: 1px solid var(--ui-line); border-radius: 9px; background: rgba(255, 255, 255, 0.035); font-size: 12px; white-space: nowrap; }
+.usage-acc { font-weight: 600; color: var(--dim); }
+.um { display: flex; align-items: center; gap: 6px; }
+.um-l { color: var(--dim); }
+.um-bar {
+  position: relative; display: block; width: 64px; height: 8px;
+  background: repeating-linear-gradient(90deg, rgba(160, 176, 210, 0.2) 0 6px, transparent 6px 8px);
+}
+.um-bar::after {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: calc(var(--pct, 0) * 1%);
+  background: var(--lv, var(--lv-ok));
+  -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 8px);
+  mask-image: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 8px);
+  mask-size: 64px 100%; -webkit-mask-size: 64px 100%;
+}
+.um.lv-ok { --lv: var(--lv-ok); } .um.lv-warn { --lv: var(--lv-warn); } .um.lv-crit { --lv: var(--lv-crit); }
+.um-p { font-variant-numeric: tabular-nums; min-width: 32px; text-align: right; color: var(--lv, var(--text)); }
+.um-r { color: var(--faint); font-variant-numeric: tabular-nums; }
+.um.empty .um-bar::after { display: none; }
+.um.empty .um-p { color: var(--faint); }
+.usage.is-stale { opacity: .72; }
+.usage-old { color: var(--waiting); font-size: 11px; }
+.usage-none { color: var(--dim); }
+.usage-help { background: rgba(124, 200, 255, 0.13); border: 1px solid rgba(124, 200, 255, 0.4); color: var(--ui-accent); border-radius: 6px; padding: 2px 9px; font-size: 12px; cursor: pointer; }
+.usage-help:hover { background: rgba(124, 200, 255, 0.22); }
+.usage-pop { position: fixed; z-index: 80; width: 340px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; background: rgba(20, 24, 33, 0.97); }
+.usage-pop p, .usage-pop ol { margin: 0; color: var(--dim); }
+.usage-pop ol { padding-left: 18px; }
+.usage-pop li { margin: 3px 0; }
+.usage-pop code { background: rgba(255, 255, 255, 0.07); border-radius: 5px; padding: 1px 6px; font: 12px var(--mono); color: var(--text); }
+.usage-pop .row { display: flex; gap: 8px; justify-content: flex-end; }
+.usage-pop .dim { color: var(--faint); }
+
+/* aviso do Modo celular: faixa fina logo abaixo do topo */
+.phone-banner { position: fixed; z-index: 29; left: 50%; transform: translateX(-50%); top: calc(var(--topbar-h) + var(--gap) * 1.5); border: 1px solid var(--waiting); border-radius: 999px; padding: 4px 16px; }
+
+/* ------------------------------------------------- lista de departamentos (esquerda) */
+.rail { position: fixed; z-index: 20; left: var(--gap); top: calc(var(--topbar-h) + var(--gap) * 2); bottom: var(--gap); width: var(--rail-w); display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+body.v-team .rail { display: none; }
+.rail-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 12px 14px 8px; }
+.rail-head h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); }
+.rail-count { color: var(--faint); font-size: 12px; }
+.rail-list { flex: 1; min-height: 0; overflow-y: auto; padding: 2px 8px 8px; display: flex; flex-direction: column; gap: 6px; }
+.rrow { position: relative; border: 1px solid var(--ui-line); border-radius: 9px; background: rgba(255, 255, 255, 0.03); padding: 8px 9px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; transition: background-color .15s, border-color .15s; }
+.rrow:hover { background: rgba(255, 255, 255, 0.06); border-color: var(--ui-line-strong); }
+.rrow.s-waiting { border-color: rgba(255, 179, 64, .55); }
+.rr-head { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.rr-head .dot { flex: none; width: 9px; height: 9px; border-radius: 2px; background: var(--pc, var(--idle)); }
+.rr-head .dot.s-working { animation: pulse 1.2s steps(2) infinite; } .rr-head .dot.s-waiting { animation: pulse .7s steps(2) infinite; }
+.rr-title { min-width: 0; flex: 1; display: flex; flex-direction: column; line-height: 1.2; }
+.rr-title b { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rr-title span { font-size: 11.5px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rr-act { flex: none; font-size: 11px; font-weight: 700; color: var(--pc, var(--idle)); border: 1px solid var(--pc, var(--idle)); border-radius: 999px; padding: 0 7px; }
+.rrow .chat-btn { padding: 2px 8px; font-size: 11.5px; border-radius: 7px; }
+.rrow .more-btn { width: 22px; height: 22px; line-height: 16px; font-size: 16px; }
+.rrow .grip { width: 18px; height: 24px; font-size: 12px; align-self: center; background: transparent; border-color: transparent; }
+.rrow .grip:hover { border-color: var(--ui-accent); }
+.rr-people { display: flex; flex-wrap: wrap; gap: 4px; }
+.rp { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--ui-line); border-radius: 999px; padding: 1px 8px 1px 6px; font-size: 11.5px; background: rgba(255, 255, 255, 0.03); color: var(--dim); max-width: 120px; }
+.rp span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rp .dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--pc, var(--idle)); }
+.rp:hover, .rp.sel { color: var(--text); border-color: var(--accent, var(--ui-accent)); }
+.rp.sel { background: rgba(124, 200, 255, 0.12); }
+.rp.s-working .dot { animation: pulse 1.2s ease-in-out infinite; } .rp.s-waiting .dot { animation: pulse .7s ease-in-out infinite; }
+.rp-more { color: var(--faint); font-size: 11.5px; align-self: center; }
+.rrow .o-mail { position: static; max-width: 100%; align-self: flex-start; font-size: 11.5px; padding: 2px 9px; }
+
+.rail-brain { flex: none; padding: 0 8px 8px; }
+.brain { width: 100%; display: grid; grid-template-columns: auto 1fr; column-gap: 9px; row-gap: 1px; align-items: center; text-align: left; border: 1px solid rgba(139, 124, 246, 0.35); border-radius: 9px; background: rgba(139, 124, 246, 0.08); padding: 7px 10px; cursor: pointer; }
+.brain:hover { background: rgba(139, 124, 246, 0.16); }
+.brain.off { filter: saturate(.5); border-color: var(--ui-line); background: rgba(255, 255, 255, 0.03); }
+.brain.live { border-color: rgba(139, 124, 246, 0.8); }
+.brain-ic { grid-row: 1 / 3; font-size: 18px; }
+.brain b { font-size: 12.5px; }
+.brain-sub { color: var(--faint); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brain .brain-live { grid-column: 1 / 3; margin: 6px 0 0; }
+
+/* ------------------------------------------------------------- visão Equipe */
+.stage { position: fixed; z-index: 10; left: var(--gap); top: calc(var(--topbar-h) + var(--gap) * 2); padding: 0 4px 4px 0; display: flex; flex-direction: column; gap: 14px; overflow: auto;
+  right: calc(var(--gap) + (var(--side-w) + var(--gap)) * var(--side-on)); bottom: calc(var(--dock-h) + var(--gap) * 2); }
+.room { background: var(--ui-bg); -webkit-backdrop-filter: blur(14px) saturate(1.25); backdrop-filter: blur(14px) saturate(1.25); border-color: var(--ui-line); border-radius: var(--ui-radius); }
+/* no escritório o palco é só o aviso de "vazio", centrado sobre o canvas */
+body.v-office .stage { left: 0; right: 0; top: 0; bottom: 0; overflow: hidden; pointer-events: none; display: grid; place-items: center; padding: 0; }
+body.v-office .stage > .empty { pointer-events: auto; margin: 0; padding: 22px 26px; max-width: 540px; }
+
+/* ----------------------------------------------------------------- direita */
+.side { position: fixed; z-index: 25; right: var(--gap); top: calc(var(--topbar-h) + var(--gap) * 2); bottom: var(--gap); width: var(--side-w); min-width: 0; max-width: calc(100vw - var(--gap) * 2); display: flex; flex-direction: column; min-height: 0; overflow: hidden; border-left: 1px solid var(--ui-line); }
+.side-resizer { position: fixed; z-index: 26; right: calc(var(--gap) + var(--side-w) - 4px); top: calc(var(--topbar-h) + var(--gap) * 2); bottom: var(--gap); width: 8px; margin: 0; }
+body.side-off .side, body.side-off .side-resizer { display: none; }
+body.side-off { --side-on: 0; }
+body.v-team .rail { display: none; }
+body.v-team { --rail-on: 0; }
+.profile { border-top-width: 3px; }
+.profile .close, .chat-head, .tile, .task { background: rgba(255, 255, 255, 0.045); }
+
+/* ------------------------------------------------------------------ embaixo */
+.dock { position: fixed; z-index: 20; bottom: var(--gap); height: var(--dock-open); display: flex; flex-direction: column; min-height: 0; overflow: hidden; border-top: 1px solid var(--ui-line);
+  left: calc((var(--rail-w) + var(--gap)) * var(--rail-on) + var(--gap)); right: calc(var(--gap) + (var(--side-w) + var(--gap)) * var(--side-on)); }
+.dock.collapsed { height: auto; }
+.dock-head { padding: 6px 12px; gap: 10px 14px; }
+.dock-tabs { display: inline-flex; gap: 4px; }
+.dock-tab { background: transparent; border: 1px solid transparent; border-radius: 7px; padding: 4px 11px; color: var(--dim); font-size: 13px; font-weight: 600; cursor: pointer; }
+.dock-tab:hover { color: var(--text); background: rgba(255, 255, 255, 0.05); }
+.dock-tab[aria-selected="true"] { color: var(--ui-accent); background: rgba(124, 200, 255, 0.13); }
+.dock:not(.tab-time) #dock-legend, .dock:not(.tab-time) .win-switch { display: none; }
+.dock-head #dock-toggle { margin-left: auto; }
+.dock-body { flex: 1; min-height: 0; overflow: hidden; padding: 0; display: flex; flex-direction: column; }
+.dock-pane { flex: 1; min-height: 0; overflow-y: auto; padding: 0 14px 10px; }
+.dock-pane[hidden] { display: none; }
+.dock .feed { padding: 2px 0; }
+.dock .feed li { border-bottom-color: rgba(160, 176, 210, 0.08); }
+
+/* ---------------------------------------------------------- câmera (+ − ⤢) */
+.map-tools { position: fixed; z-index: 21; display: flex; flex-direction: column; overflow: hidden; border-radius: 9px;
+  right: calc(var(--gap) + (var(--side-w) + var(--gap)) * var(--side-on)); bottom: calc(var(--dock-h) + var(--gap) * 2); }
+body.v-team .map-tools { display: none; }
+.map-tools button { width: 34px; height: 32px; background: transparent; border: 0; color: var(--dim); font-size: 17px; cursor: pointer; }
+.map-tools button + button { border-top: 1px solid var(--ui-line); }
+.map-tools button:hover { background: rgba(255, 255, 255, 0.07); color: var(--text); }
+
+/* menu do botão direito e envelopes ficam acima de tudo */
+.room-menu { z-index: 90; background: rgba(20, 24, 33, 0.97); border-color: var(--ui-line-strong); }
+.empty { background: var(--ui-bg); }
+
+/* Ajustes (som, avisos, decoração) num balão sob o botão */
+.menu-wrap { position: relative; }
+.settings-pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 40; width: 270px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; background: rgba(20, 24, 33, 0.97); }
+.settings-pop[hidden] { display: none; }
+.settings-pop .sel { max-width: none; width: 100%; }
+.rrow .rr-people .chat-btn { margin-left: auto; }
+
+/* topo numa linha só: o mostrador de uso encosta nos botões da direita */
+.topbar .brand { flex: none; }
+.topbar .stats { flex: 0 0 auto; flex-wrap: nowrap; }
+.topbar .usage { margin-left: auto; }
+.topbar .controls { margin-left: auto; justify-content: flex-end; }
+.topbar .usage { margin-left: auto; }
+.topbar .usage + .seg-switch { margin-left: 0; }
+.settings-pop .btn { width: 100%; justify-content: center; }
+
+/* janelas estreitas: a lista lateral some (o escritório continua inteiro; a lista volta ao alargar) */
+@media (max-width: 900px) {
+  .rail { display: none; }
+  body { --rail-on: 0; }
+}

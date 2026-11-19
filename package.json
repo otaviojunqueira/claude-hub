@@ -1,0 +1,27 @@
+{
+  "name": "claude-hub",
+  "version": "0.1.0",
+  "description": "Hub nativo (somente leitura) para acompanhar agentes e subagentes do Claude Code: status, feed ao vivo, tarefas, tokens e relatório do expediente.",
+  "main": "src/main.js",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "electron . --no-sandbox",
+    "install-hooks": "node scripts/install-hooks.js",
+    "uninstall-hooks": "node scripts/install-hooks.js --uninstall",
+    "install-desktop": "node scripts/install-desktop.js",
+    "install-desktop:autostart": "node scripts/install-desktop.js --autostart",
+    "demo": "node scripts/demo.js",
+    "test": "node test/collector.test.js && node test/phone.test.js && node test/chat.test.js && node test/vault.test.js && node test/office.test.js && node test/deliveries.test.js && node test/usage.test.js && node test/bridge.test.js",
+    "build-world": "node scripts/build-world.mjs"
+  },
+  "devDependencies": {
+    "electron": "^40.0.0"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  }
+}

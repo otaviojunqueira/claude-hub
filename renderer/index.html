@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:;">
+  <title>Claude Hub</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="glass.css">
+</head>
+<body class="v-office">
+  <!-- o escritório (canvas do Habblaud) ocupa a janela inteira; tudo o mais flutua por cima, em vidro -->
+  <canvas id="world" class="world-canvas" aria-label="Escritório animado" tabindex="-1"></canvas>
+
+  <header id="topbar-box" class="topbar glass">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <h1>Claude Hub</h1>
+    </div>
+
+    <div class="stats" id="stats" aria-live="polite"></div>
+
+    <div id="usage" class="usage" aria-label="Uso do plano"></div>
+
+    <div class="seg-switch" role="tablist" aria-label="Modo de exibição">
+      <button id="v-office" role="tab" type="button">Escritório</button>
+      <button id="v-team" role="tab" type="button">Equipe</button>
+    </div>
+
+    <button id="btn-inbox" class="bell" type="button" title="Pendências: tudo que espera você, de todos os departamentos (Alt+I)" aria-haspopup="dialog" aria-expanded="false"></button>
+
+    <div class="controls">
+      <div class="menu-wrap">
+        <button id="btn-settings" class="btn" type="button" aria-haspopup="true" aria-expanded="false" title="Som, avisos e decoração">Ajustes</button>
+        <div id="settings-pop" class="settings-pop glass" hidden>
+          <label class="toggle"><input type="checkbox" id="opt-sound"><span>Som</span></label>
+          <label class="toggle" title="Avisar quando um agente pedir permissão"><input type="checkbox" id="opt-waiting"><span>Avisar pedidos de permissão</span></label>
+          <label class="toggle" title="Avisar quando um agente terminar uma tarefa longa"><input type="checkbox" id="opt-done"><span>Avisar término de tarefas</span></label>
+          <select id="opt-theme" class="sel" title="Decoração do escritório" aria-label="Decoração do escritório">
+            <option value="auto">Decoração: automática</option>
+            <option value="none">Decoração: normal</option>
+            <option value="christmas">Decoração: Natal</option>
+            <option value="halloween">Decoração: Halloween</option>
+          </select>
+          <select id="opt-team" class="sel" title="Pessoas que ficam passeando em cada departamento, mesmo sem trabalho" aria-label="Equipe fixa">
+            <option value="0">Equipe fixa: nenhuma</option>
+            <option value="2">Equipe fixa: 2 pessoas</option>
+            <option value="4">Equipe fixa: 4 pessoas</option>
+            <option value="6">Equipe fixa: 6 pessoas</option>
+            <option value="8">Equipe fixa: 8 pessoas</option>
+          </select>
+          <button id="btn-clear" class="btn" type="button" title="Esconde sessões que não estão trabalhando (o gerente fica)">Limpar departamentos inativos</button>
+        </div>
+      </div>
+      <button id="btn-newdept" class="btn" type="button" title="Abrir um novo departamento (chat novo) aqui no hub">Novo departamento</button>
+      <button id="btn-phone" class="btn" type="button" title="Ver e responder os agentes pelo celular, no mesmo Wi-Fi">Celular</button>
+      <button id="btn-shift" class="btn primary" type="button" title="Resumo do dia: quanto cada agente trabalhou e esperou por você">Encerrar expediente</button>
+    </div>
+  </header>
+
+  <div id="phone-banner" class="phone-banner" hidden></div>
+
+  <!-- esquerda: departamentos (como a barra lateral do Habblaud) -->
+  <aside id="rail" class="rail glass" aria-label="Departamentos">
+    <div class="rail-head"><h2>Escritório</h2><span id="rail-count" class="rail-count"></span></div>
+    <div id="rail-list" class="rail-list"></div>
+    <div id="rail-brain" class="rail-brain"></div>
+  </aside>
+
+  <!-- visão Equipe: os cartões dos departamentos (rola sozinha, entre os painéis) -->
+  <section id="stage" class="stage" aria-label="Equipe de agentes"></section>
+
+  <!-- direita: ficha do agente, chat do departamento, Cérebro -->
+  <div id="side-resizer" class="side-resizer" role="separator" aria-orientation="vertical" aria-label="Largura do painel lateral" title="Arraste para ajustar a largura (duplo clique restaura)" tabindex="0"></div>
+  <aside id="side" class="side glass" aria-label="Detalhes"></aside>
+
+  <!-- embaixo: Atividade ao vivo e Linha do tempo -->
+  <section id="dock" class="dock glass" aria-label="Atividade e linha do tempo">
+    <div class="dock-head">
+      <div class="dock-tabs" role="tablist" aria-label="Painel de baixo">
+        <button id="tab-feed" class="dock-tab" role="tab" type="button">Atividade ao vivo</button>
+        <button id="tab-time" class="dock-tab" role="tab" type="button">Linha do tempo da equipe</button>
+      </div>
+      <div id="dock-legend"></div>
+      <div class="win-switch" id="dock-win" role="group" aria-label="Janela de tempo"></div>
+      <button id="dock-toggle" class="chip-btn" type="button" aria-expanded="true">Recolher</button>
+    </div>
+    <div id="dock-body" class="dock-body">
+      <div id="pane-feed" class="dock-pane"><ol id="feed" class="feed"></ol></div>
+      <div id="pane-time" class="dock-pane">
+        <div class="lane axis-row"><div class="lane-label"></div><div class="axis" id="dock-axis"></div></div>
+        <div id="lanes"></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="map-tools" class="map-tools glass" aria-label="Câmera do escritório">
+    <button id="cam-in" type="button" title="Aproximar" aria-label="Aproximar">+</button>
+    <button id="cam-out" type="button" title="Afastar" aria-label="Afastar">−</button>
+    <button id="cam-fit" type="button" title="Enquadrar o prédio inteiro" aria-label="Enquadrar o prédio inteiro">⤢</button>
+  </div>
+
+  <script src="persona.js"></script>
+  <script src="pixel.js"></script>
+  <script src="habblaud-world.js"></script>
+  <script src="habbridge.js"></script>
+  <script src="timeline.js"></script>
+  <script src="sector.js"></script>
+  <script src="report.js"></script>
+  <script src="phonepanel.js"></script>
+  <script src="composer.js"></script>
+  <script src="vault.js"></script>
+  <script src="inbox.js"></script>
+  <script src="away.js"></script>
+  <script src="chat.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
